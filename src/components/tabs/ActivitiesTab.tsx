@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -29,64 +30,74 @@ export function ActivitiesTab({ tripId }: ActivitiesTabProps) {
     status: "planned" as const,
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name) {
       toast.error("Please enter activity name");
       return;
     }
 
-    try {
-      await createActivity({
-        tripId,
-        ...formData,
-        description: formData.description || undefined,
-        location: formData.location || undefined,
-        date: formData.date || undefined,
-        time: formData.time || undefined,
-        cost: formData.cost || undefined,
+    createActivity({
+      tripId,
+      ...formData,
+      description: formData.description || undefined,
+      location: formData.location || undefined,
+      date: formData.date || undefined,
+      time: formData.time || undefined,
+      cost: formData.cost || undefined,
+    })
+      .then(() => {
+        setFormData({
+          name: "",
+          description: "",
+          location: "",
+          date: "",
+          time: "",
+          cost: "",
+          bookingRequired: false,
+          status: "planned",
+        });
+        setShowForm(false);
+        toast.success("Activity added!");
+      })
+      .catch(() => {
+        toast.error("Failed to add activity");
       });
-      setFormData({
-        name: "",
-        description: "",
-        location: "",
-        date: "",
-        time: "",
-        cost: "",
-        bookingRequired: false,
-        status: "planned",
-      });
-      setShowForm(false);
-      toast.success("Activity added!");
-    } catch (error) {
-      toast.error("Failed to add activity");
-    }
   };
 
-  const handleStatusChange = async (activityId: Id<"activities">, status: "planned" | "booked" | "completed") => {
-    try {
-      await updateActivity({ activityId, status });
-      toast.success("Status updated!");
-    } catch (error) {
-      toast.error("Failed to update status");
-    }
+  const handleStatusChange = (
+    activityId: Id<"activities">,
+    status: "planned" | "booked" | "completed"
+  ) => {
+    updateActivity({ activityId, status })
+      .then(() => {
+        toast.success("Status updated!");
+      })
+      .catch(() => {
+        toast.error("Failed to update status");
+      });
   };
 
-  const handleDelete = async (activityId: Id<"activities">) => {
-    try {
-      await removeActivity({ activityId });
-      toast.success("Activity removed");
-    } catch (error) {
-      toast.error("Failed to remove activity");
-    }
+  const handleDelete = (activityId: Id<"activities">) => {
+    removeActivity({ activityId })
+      .then(() => {
+        toast.success("Activity removed");
+      })
+      .catch(() => {
+        toast.error("Failed to remove activity");
+      });
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "planned": return "bg-yellow-100 text-yellow-800";
-      case "booked": return "bg-blue-100 text-blue-800";
-      case "completed": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "planned":
+        return "bg-yellow-100 text-yellow-800";
+      case "booked":
+        return "bg-blue-100 text-blue-800";
+      case "completed":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -97,9 +108,7 @@ export function ActivitiesTab({ tripId }: ActivitiesTabProps) {
           <h3 className="text-lg font-semibold text-gray-900">Activities</h3>
           <p className="text-gray-600">Plan and track your trip activities</p>
         </div>
-        <Button onClick={() => setShowForm(true)}>
-          + Add Activity
-        </Button>
+        <Button onClick={() => setShowForm(true)}>+ Add Activity</Button>
       </div>
 
       {showForm && (
@@ -111,7 +120,9 @@ export function ActivitiesTab({ tripId }: ActivitiesTabProps) {
               </label>
               <Input
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="e.g., Louvre Museum Tour"
                 required
               />
@@ -123,7 +134,9 @@ export function ActivitiesTab({ tripId }: ActivitiesTabProps) {
               </label>
               <Textarea
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 placeholder="What will you do?"
                 rows={2}
               />
@@ -136,7 +149,9 @@ export function ActivitiesTab({ tripId }: ActivitiesTabProps) {
                 </label>
                 <Input
                   value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, location: e.target.value })
+                  }
                   placeholder="e.g., Rue de Rivoli, Paris"
                 />
               </div>
@@ -146,7 +161,9 @@ export function ActivitiesTab({ tripId }: ActivitiesTabProps) {
                 </label>
                 <Input
                   value={formData.cost}
-                  onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, cost: e.target.value })
+                  }
                   placeholder="e.g., €25 per person"
                 />
               </div>
@@ -160,7 +177,9 @@ export function ActivitiesTab({ tripId }: ActivitiesTabProps) {
                 <Input
                   type="date"
                   value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, date: e.target.value })
+                  }
                 />
               </div>
               <div>
@@ -170,7 +189,9 @@ export function ActivitiesTab({ tripId }: ActivitiesTabProps) {
                 <Input
                   type="time"
                   value={formData.time}
-                  onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, time: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -180,16 +201,27 @@ export function ActivitiesTab({ tripId }: ActivitiesTabProps) {
                 <input
                   type="checkbox"
                   checked={formData.bookingRequired}
-                  onChange={(e) => setFormData({ ...formData, bookingRequired: e.target.checked })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      bookingRequired: e.target.checked,
+                    })
+                  }
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-sm text-gray-700">Booking required</span>
+                <span className="ml-2 text-sm text-gray-700">
+                  Booking required
+                </span>
               </label>
             </div>
 
             <div className="flex space-x-3">
               <Button type="submit">Add Activity</Button>
-              <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShowForm(false)}
+              >
                 Cancel
               </Button>
             </div>
@@ -202,17 +234,24 @@ export function ActivitiesTab({ tripId }: ActivitiesTabProps) {
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl">🎯</span>
           </div>
-          <h4 className="text-lg font-semibold text-gray-900 mb-2">No activities yet</h4>
+          <h4 className="text-lg font-semibold text-gray-900 mb-2">
+            No activities yet
+          </h4>
           <p className="text-gray-600">Start planning your trip activities!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {activities.map((activity) => (
-            <div key={activity._id} className="bg-white border border-gray-200 rounded-lg p-4">
+            <div
+              key={activity._id}
+              className="bg-white border border-gray-200 rounded-lg p-4"
+            >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">🎯</span>
-                  <h4 className="font-semibold text-gray-900">{activity.name}</h4>
+                  <h4 className="font-semibold text-gray-900">
+                    {activity.name}
+                  </h4>
                 </div>
                 <button
                   onClick={() => handleDelete(activity._id)}
@@ -223,11 +262,15 @@ export function ActivitiesTab({ tripId }: ActivitiesTabProps) {
               </div>
 
               {activity.description && (
-                <p className="text-sm text-gray-700 mb-3">{activity.description}</p>
+                <p className="text-sm text-gray-700 mb-3">
+                  {activity.description}
+                </p>
               )}
 
               {activity.location && (
-                <p className="text-sm text-gray-600 mb-2">📍 {activity.location}</p>
+                <p className="text-sm text-gray-600 mb-2">
+                  📍 {activity.location}
+                </p>
               )}
 
               {activity.date && (
@@ -242,7 +285,9 @@ export function ActivitiesTab({ tripId }: ActivitiesTabProps) {
               )}
 
               <div className="flex items-center justify-between mb-3">
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(activity.status)}`}>
+                <span
+                  className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(activity.status)}`}
+                >
                   {activity.status}
                 </span>
                 {activity.bookingRequired && (
@@ -256,7 +301,9 @@ export function ActivitiesTab({ tripId }: ActivitiesTabProps) {
                 <button
                   onClick={() => handleStatusChange(activity._id, "planned")}
                   className={`px-2 py-1 text-xs rounded ${
-                    activity.status === "planned" ? "bg-yellow-200" : "bg-gray-100 hover:bg-gray-200"
+                    activity.status === "planned"
+                      ? "bg-yellow-200"
+                      : "bg-gray-100 hover:bg-gray-200"
                   }`}
                 >
                   Planned
@@ -264,7 +311,9 @@ export function ActivitiesTab({ tripId }: ActivitiesTabProps) {
                 <button
                   onClick={() => handleStatusChange(activity._id, "booked")}
                   className={`px-2 py-1 text-xs rounded ${
-                    activity.status === "booked" ? "bg-blue-200" : "bg-gray-100 hover:bg-gray-200"
+                    activity.status === "booked"
+                      ? "bg-blue-200"
+                      : "bg-gray-100 hover:bg-gray-200"
                   }`}
                 >
                   Booked
@@ -272,7 +321,9 @@ export function ActivitiesTab({ tripId }: ActivitiesTabProps) {
                 <button
                   onClick={() => handleStatusChange(activity._id, "completed")}
                   className={`px-2 py-1 text-xs rounded ${
-                    activity.status === "completed" ? "bg-green-200" : "bg-gray-100 hover:bg-gray-200"
+                    activity.status === "completed"
+                      ? "bg-green-200"
+                      : "bg-gray-100 hover:bg-gray-200"
                   }`}
                 >
                   Done

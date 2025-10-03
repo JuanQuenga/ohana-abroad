@@ -1,11 +1,12 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { getCurrentUser } from "./auth";
 
 export const list = query({
   args: { tripId: v.id("trips") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
     if (!userId) return [];
     
     return await ctx.db
@@ -23,7 +24,8 @@ export const create = mutation({
     dueDate: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
     if (!userId) throw new Error("Not authenticated");
     
     return await ctx.db.insert("reminders", {
@@ -37,7 +39,8 @@ export const create = mutation({
 export const toggleCompleted = mutation({
   args: { reminderId: v.id("reminders") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
     if (!userId) throw new Error("Not authenticated");
     
     const reminder = await ctx.db.get(args.reminderId);
@@ -55,7 +58,8 @@ export const update = mutation({
     dueDate: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
     if (!userId) throw new Error("Not authenticated");
     
     const { reminderId, ...updates } = args;
@@ -70,7 +74,8 @@ export const update = mutation({
 export const remove = mutation({
   args: { reminderId: v.id("reminders") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
     if (!userId) throw new Error("Not authenticated");
     
     await ctx.db.delete(args.reminderId);

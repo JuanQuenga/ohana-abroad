@@ -1,17 +1,18 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { getCurrentUser } from "./auth";
+import { Doc } from "./_generated/dataModel";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
 
     // Get trips where user is a member
     const memberships = await ctx.db
       .query("tripMembers")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .withIndex("by_user", (q: any) => q.eq("userId", userId))
       .collect();
 
     const tripIds = memberships.map((m) => m.tripId);
@@ -31,8 +32,8 @@ export const list = query({
 export const get = query({
   args: { tripId: v.id("trips") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return null;
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
 
     return await ctx.db.get(args.tripId);
   },
@@ -47,8 +48,8 @@ export const create = mutation({
     description: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
 
     const tripId = await ctx.db.insert("trips", {
       ...args,
@@ -78,8 +79,8 @@ export const update = mutation({
     description: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
 
     const { tripId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
@@ -93,8 +94,8 @@ export const update = mutation({
 export const remove = mutation({
   args: { tripId: v.id("trips") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
 
     await ctx.db.delete(args.tripId);
   },
@@ -104,16 +105,14 @@ export const remove = mutation({
 export const getMembers = query({
   args: { tripId: v.id("trips") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
 
     // Check if user has access to this trip
     const membership = await ctx.db
       .query("tripMembers")
-      .withIndex("by_trip", (q) => q.eq("tripId", args.tripId))
-      .filter((q) => q.eq(q.field("userId"), userId))
+      .withIndex("by_trip", (q: any) => q.eq("tripId", args.tripId))
+      .filter((q: any) => q.eq(q.field("userId"), userId))
       .first();
 
     if (!membership) {
@@ -122,7 +121,7 @@ export const getMembers = query({
 
     const members = await ctx.db
       .query("tripMembers")
-      .withIndex("by_trip", (q) => q.eq("tripId", args.tripId))
+      .withIndex("by_trip", (q: any) => q.eq("tripId", args.tripId))
       .collect();
 
     // Get user details for each member
@@ -149,16 +148,14 @@ export const inviteMember = mutation({
     role: v.union(v.literal("editor"), v.literal("viewer")),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
 
     // Check if user has permission to invite (owner or editor)
     const membership = await ctx.db
       .query("tripMembers")
-      .withIndex("by_trip", (q) => q.eq("tripId", args.tripId))
-      .filter((q) =>
+      .withIndex("by_trip", (q: any) => q.eq("tripId", args.tripId))
+      .filter((q: any) =>
         q.and(
           q.eq(q.field("userId"), userId),
           q.or(q.eq(q.field("role"), "owner"), q.eq(q.field("role"), "editor"))
@@ -173,8 +170,8 @@ export const inviteMember = mutation({
     // Check if user is already a member
     const existingMember = await ctx.db
       .query("tripMembers")
-      .withIndex("by_trip", (q) => q.eq("tripId", args.tripId))
-      .filter((q) => q.eq(q.field("userId"), userId))
+      .withIndex("by_trip", (q: any) => q.eq("tripId", args.tripId))
+      .filter((q: any) => q.eq(q.field("userId"), userId))
       .first();
 
     if (existingMember) {
@@ -184,8 +181,8 @@ export const inviteMember = mutation({
     // Check for existing pending invitation
     const existingInvitation = await ctx.db
       .query("tripInvitations")
-      .withIndex("by_trip", (q) => q.eq("tripId", args.tripId))
-      .filter((q) =>
+      .withIndex("by_trip", (q: any) => q.eq("tripId", args.tripId))
+      .filter((q: any) =>
         q.and(
           q.eq(q.field("email"), args.email),
           q.eq(q.field("status"), "pending")
@@ -220,15 +217,13 @@ export const inviteMember = mutation({
 export const acceptInvitation = mutation({
   args: { token: v.string() },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
 
     const invitation = await ctx.db
       .query("tripInvitations")
-      .withIndex("by_token", (q) => q.eq("token", args.token))
-      .filter((q) => q.eq(q.field("status"), "pending"))
+      .withIndex("by_token", (q: any) => q.eq("token", args.token))
+      .filter((q: any) => q.eq(q.field("status"), "pending"))
       .first();
 
     if (!invitation) {
@@ -241,16 +236,16 @@ export const acceptInvitation = mutation({
     }
 
     // Get user to check email match
-    const user = await ctx.db.get(userId);
-    if (!user || user.email !== invitation.email) {
+    const userDoc = (await ctx.db.get(userId)) as Doc<"users">;
+    if (!userDoc || userDoc.email !== invitation.email) {
       throw new Error("Invitation email doesn't match your account");
     }
 
     // Check if user is already a member
     const existingMember = await ctx.db
       .query("tripMembers")
-      .withIndex("by_trip", (q) => q.eq("tripId", invitation.tripId))
-      .filter((q) => q.eq(q.field("userId"), userId))
+      .withIndex("by_trip", (q: any) => q.eq("tripId", invitation.tripId))
+      .filter((q: any) => q.eq(q.field("userId"), userId))
       .first();
 
     if (existingMember) {

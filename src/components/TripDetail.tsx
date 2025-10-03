@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { Doc } from "../../convex/_generated/dataModel";
 import { Button } from "./ui/Button";

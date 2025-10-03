@@ -1,12 +1,12 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { getCurrentUser } from "./auth";
 
 export const list = query({
   args: { tripId: v.id("trips") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
     
     return await ctx.db
       .query("accommodations")
@@ -26,8 +26,8 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
     
     return await ctx.db.insert("accommodations", {
       ...args,
@@ -47,8 +47,8 @@ export const update = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
     
     const { accommodationId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
@@ -62,8 +62,8 @@ export const update = mutation({
 export const remove = mutation({
   args: { accommodationId: v.id("accommodations") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
     
     await ctx.db.delete(args.accommodationId);
   },

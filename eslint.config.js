@@ -21,6 +21,7 @@ export default tseslint.config(
       ...tseslint.configs.recommendedTypeChecked,
     ],
     files: ["**/*.{ts,tsx}"],
+    ignores: ["app/**/*"],
     languageOptions: {
       ecmaVersion: 2020,
       globals: {
@@ -73,5 +74,5 @@ export default tseslint.config(
       // for consistency (esp. Convex `handler`s)
       "@typescript-eslint/require-await": "off",
     },
-  },
+  }
 );

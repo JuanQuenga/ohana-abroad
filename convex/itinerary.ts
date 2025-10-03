@@ -1,11 +1,12 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { getCurrentUser } from "./auth";
 
 export const list = query({
   args: { tripId: v.id("trips") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
     if (!userId) return [];
     
     return await ctx.db
@@ -26,7 +27,8 @@ export const create = mutation({
     type: v.union(v.literal("activity"), v.literal("transport"), v.literal("meal"), v.literal("accommodation")),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
     if (!userId) throw new Error("Not authenticated");
     
     return await ctx.db.insert("itineraryItems", {
@@ -47,7 +49,8 @@ export const update = mutation({
     type: v.optional(v.union(v.literal("activity"), v.literal("transport"), v.literal("meal"), v.literal("accommodation"))),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
     if (!userId) throw new Error("Not authenticated");
     
     const { itemId, ...updates } = args;
@@ -62,7 +65,8 @@ export const update = mutation({
 export const remove = mutation({
   args: { itemId: v.id("itineraryItems") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const user = await getCurrentUser(ctx);
+    const userId = user._id;
     if (!userId) throw new Error("Not authenticated");
     
     await ctx.db.delete(args.itemId);

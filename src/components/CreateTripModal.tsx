@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -20,7 +21,7 @@ export function CreateTripModal({ onClose }: CreateTripModalProps) {
 
   const createTrip = useMutation(api.trips.create);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !destination || !startDate || !endDate) {
       toast.error("Please fill in all required fields");
@@ -33,21 +34,23 @@ export function CreateTripModal({ onClose }: CreateTripModalProps) {
     }
 
     setIsSubmitting(true);
-    try {
-      await createTrip({
-        title,
-        destination,
-        startDate,
-        endDate,
-        description: description || undefined,
+    createTrip({
+      title,
+      destination,
+      startDate,
+      endDate,
+      description: description || undefined,
+    })
+      .then(() => {
+        toast.success("Trip created successfully!");
+        onClose();
+      })
+      .catch(() => {
+        toast.error("Failed to create trip");
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
-      toast.success("Trip created successfully!");
-      onClose();
-    } catch (error) {
-      toast.error("Failed to create trip");
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   return (

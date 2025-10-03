@@ -1,5 +1,6 @@
+"use client";
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { TripCard } from "./TripCard";

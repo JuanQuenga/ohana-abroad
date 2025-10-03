@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -22,7 +23,7 @@ export function InviteMembersModal({
   const inviteMember = useMutation(api.trips.inviteMember);
   const members = useQuery(api.trips.getMembers, { tripId });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
       toast.error("Please enter an email address");
@@ -30,15 +31,17 @@ export function InviteMembersModal({
     }
 
     setIsSubmitting(true);
-    try {
-      await inviteMember({ tripId, email: email.trim(), role });
-      toast.success("Invitation sent successfully!");
-      setEmail("");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to send invitation");
-    } finally {
-      setIsSubmitting(false);
-    }
+    inviteMember({ tripId, email: email.trim(), role })
+      .then(() => {
+        toast.success("Invitation sent successfully!");
+        setEmail("");
+      })
+      .catch((error: any) => {
+        toast.error(error.message || "Failed to send invitation");
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   const getRoleBadge = (role: string) => {
