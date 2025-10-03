@@ -12,6 +12,34 @@ const applicationTables = {
     createdBy: v.id("users"),
   }).index("by_created_by", ["createdBy"]),
 
+  tripMembers: defineTable({
+    tripId: v.id("trips"),
+    userId: v.id("users"),
+    role: v.union(v.literal("owner"), v.literal("editor"), v.literal("viewer")),
+    invitedBy: v.id("users"),
+    joinedAt: v.number(),
+  })
+    .index("by_trip", ["tripId"])
+    .index("by_user", ["userId"]),
+
+  tripInvitations: defineTable({
+    tripId: v.id("trips"),
+    email: v.string(),
+    role: v.union(v.literal("editor"), v.literal("viewer")),
+    invitedBy: v.id("users"),
+    invitedAt: v.number(),
+    expiresAt: v.number(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("expired")
+    ),
+    token: v.string(),
+  })
+    .index("by_trip", ["tripId"])
+    .index("by_token", ["token"])
+    .index("by_email", ["email"]),
+
   itineraryItems: defineTable({
     tripId: v.id("trips"),
     date: v.string(),
@@ -19,7 +47,12 @@ const applicationTables = {
     title: v.string(),
     description: v.optional(v.string()),
     location: v.optional(v.string()),
-    type: v.union(v.literal("activity"), v.literal("transport"), v.literal("meal"), v.literal("accommodation")),
+    type: v.union(
+      v.literal("activity"),
+      v.literal("transport"),
+      v.literal("meal"),
+      v.literal("accommodation")
+    ),
     createdBy: v.id("users"),
   }).index("by_trip_and_date", ["tripId", "date"]),
 
@@ -43,7 +76,11 @@ const applicationTables = {
     time: v.optional(v.string()),
     cost: v.optional(v.string()),
     bookingRequired: v.boolean(),
-    status: v.union(v.literal("planned"), v.literal("booked"), v.literal("completed")),
+    status: v.union(
+      v.literal("planned"),
+      v.literal("booked"),
+      v.literal("completed")
+    ),
     createdBy: v.id("users"),
   }).index("by_trip", ["tripId"]),
 
